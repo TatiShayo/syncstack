@@ -1,0 +1,142 @@
+{
+  "test_suite": "SyncStack Local-First & Collaborative Sync Test Suite",
+  "environment": {
+    "node_version": "v22.23.1",
+    "os": "Windows"
+  },
+  "summary": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0,
+    "flaky": 0,
+    "status": "PASSED"
+  },
+  "tests": [
+    {
+      "name": "Initialization",
+      "status": "passed",
+      "duration_ms": 20.32
+    },
+    {
+      "name": "Create card works correctly",
+      "status": "passed",
+      "duration_ms": 13.70
+    },
+    {
+      "name": "Edit card fields without column change works correctly",
+      "status": "passed",
+      "duration_ms": 6.30
+    },
+    {
+      "name": "Edit card with column change updates columns correctly",
+      "status": "passed",
+      "duration_ms": 10.36
+    },
+    {
+      "name": "Delete card removes it correctly",
+      "status": "passed",
+      "duration_ms": 5.48
+    },
+    {
+      "name": "Move card within the same column: no-op path (srcIndex === destIndex)",
+      "status": "passed",
+      "duration_ms": 2.30
+    },
+    {
+      "name": "Move card within same column: down (srcIndex < destIndex)",
+      "status": "passed",
+      "duration_ms": 9.12
+    },
+    {
+      "name": "Move card within same column: up (srcIndex > destIndex)",
+      "status": "passed",
+      "duration_ms": 2.74
+    },
+    {
+      "name": "Move card to a different column",
+      "status": "passed",
+      "duration_ms": 2.86
+    },
+    {
+      "name": "RACE-01: Prune orphaned reference in getCardsForColumn",
+      "status": "passed",
+      "duration_ms": 7.02
+    },
+    {
+      "name": "handleMoveColumn left and right",
+      "status": "passed",
+      "duration_ms": 4.86
+    },
+    {
+      "name": "handleMovePosition up and down",
+      "status": "passed",
+      "duration_ms": 1.28
+    },
+    {
+      "name": "VAL-01: Input validation for createCard",
+      "status": "passed",
+      "duration_ms": 0.61
+    },
+    {
+      "name": "VAL-01: Input validation for updateCard",
+      "status": "passed",
+      "duration_ms": 0.68
+    },
+    {
+      "name": "RACE-01: moveCard ignores non-existent cards",
+      "status": "passed",
+      "duration_ms": 0.62
+    },
+    {
+      "name": "Verify per-board access control validation (forbidden connections are rejected)",
+      "status": "passed",
+      "duration_ms": 1466.54
+    },
+    {
+      "name": "Verify missing token is rejected with 401/403",
+      "status": "passed",
+      "duration_ms": 1032.69
+    },
+    {
+      "name": "Valid credentials connect successfully",
+      "status": "passed",
+      "duration_ms": 173.59
+    },
+    {
+      "name": "Confirm connection state changes and real-time syncing works",
+      "status": "passed",
+      "duration_ms": 2072.25
+    },
+    {
+      "name": "Confirm distinct board isolation (no cross-talk)",
+      "status": "passed",
+      "duration_ms": 2048.62
+    },
+    {
+      "name": "Verify username changes propagate to awareness states correctly",
+      "status": "passed",
+      "duration_ms": 2201.82
+    },
+    {
+      "name": "Verify username changes are trimmed, limited to 50 characters, and fallback to Anonymous if empty (SEC-03)",
+      "status": "passed",
+      "duration_ms": 2313.60
+    },
+    {
+      "name": "Verify pending changes increment correctly while the client is disconnected",
+      "status": "passed",
+      "duration_ms": 1285.00
+    },
+    {
+      "name": "Verify pending changes count resets to 0 when reconnecting and completing sync",
+      "status": "passed",
+      "duration_ms": 1511.42
+    },
+    {
+      "name": "Verify convergent offline merge outcomes and no data loss (runs 5/5)",
+      "status": "passed",
+      "duration_ms": 7915.56
+    }
+  ],
+  "untested_code_paths_flagged": []
+}
