@@ -3,7 +3,7 @@
   "run_id": "hermes-2026-07-27-v6-syncstack",
   "project": "syncstack",
   "phase": "4.0",
-  "produced_at": "2026-07-27T23:23:24.319075",
+  "produced_at": "2026-07-27T23:25:32.033667",
   "runner_tier": "T1",
   "mode": "static-only",
   "findings": [
