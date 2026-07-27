@@ -1,58 +1,46 @@
-[
-  {
-    "id": "SEC-03",
-    "category": "Denial of Service / Input Validation",
-    "severity": "Low",
-    "title": "Missing Input Validation and Size Limits on Username in Awareness State",
-    "status": "Resolved",
-    "details": "Resolved. The collaborator username input has been secured with `maxLength={50}`, and the awareness payload is truncated using `.slice(0, 50).trim() || 'Anonymous'` before broadcast."
-  },
-  {
-    "id": "SEC-01",
-    "category": "Denial of Service",
-    "severity": "Critical",
-    "title": "WebSocket Server Prototype Pollution Crash (DoS)",
-    "status": "Resolved",
-    "details": "Resolved. The registry `AUTHORIZED_ACCESS` was updated to inherit from `null` (`Object.create(null)`), and lookups are guarded using `Object.prototype.hasOwnProperty.call(AUTHORIZED_ACCESS, boardId)`. The server also ensures both `boardId` and `token` parameters are strings."
-  },
-  {
-    "id": "SEC-02",
-    "category": "Input Validation / Parameter Injection",
-    "severity": "Medium",
-    "title": "WebSocket URL Parameter Injection",
-    "status": "Resolved",
-    "details": "Resolved. The client now properly encodes the user inputs when building the WebSocket connection string using `encodeURIComponent()`."
-  },
-  {
-    "id": "YJS-01",
-    "category": "Yjs API Safety",
-    "severity": "Critical",
-    "title": "Destructive Overwrite of Nested Y.Arrays",
-    "status": "Resolved",
-    "details": "Resolved. The developer replaced nested Y.Arrays under the 'columns' map with static top-level Y.Arrays using `doc.getArray('col-' + columnId)`."
-  },
-  {
-    "id": "RACE-01",
-    "category": "Race Conditions",
-    "severity": "High",
-    "title": "Orphaned Card References in Column Arrays",
-    "status": "Resolved",
-    "details": "Resolved. Check-then-act validation ensures card maps exist before modification, and orphaned references are pruned at render time."
-  },
-  {
-    "id": "YJS-02",
-    "category": "Yjs API Safety",
-    "severity": "Medium",
-    "title": "Redundant Position State and Conflict Storms",
-    "status": "Resolved",
-    "details": "Resolved. The redundant `position` map field was removed, with card positions derived dynamically from array indexes."
-  },
-  {
-    "id": "VAL-01",
-    "category": "Input Validation",
-    "severity": "Low",
-    "title": "Missing Input Validation and Size Limits",
-    "status": "Resolved",
-    "details": "Resolved. Input validation rules, trimming, and maxLength constraints have been enforced."
-  }
-]
+{
+  "schema": "hermes.findings.v6",
+  "run_id": "hermes-2026-07-27-v6-syncstack",
+  "project": "syncstack",
+  "phase": "4.0",
+  "produced_at": "2026-07-27T22:11:46.033756",
+  "runner_tier": "T1",
+  "mode": "static-only",
+  "findings": [
+    {
+      "id": "F-V6-001",
+      "title": "Missing 'test' Script in package.json",
+      "severity": "medium",
+      "confidence_tier": "E2-P",
+      "actionability": "P2",
+      "fix_class": "config",
+      "confidence": 0.99,
+      "category": "correctness",
+      "cwe": "CWE-1025",
+      "locations": [
+        {
+          "file": "package.json",
+          "line": 5,
+          "symbol": "scripts"
+        }
+      ],
+      "impact": "Automated test harness cannot invoke test suite via npm test.",
+      "recommended_fix": "Add 'test': 'vitest run' to package.json scripts.",
+      "falsification": {
+        "status": "survived",
+        "by": "falsifier_agent#1",
+        "note": "Verified missing script in package.json."
+      },
+      "blast_radius": {
+        "reachable_from_internet": false,
+        "requires_auth": false,
+        "data_classes": []
+      },
+      "acceptance": {
+        "previously_accepted": false,
+        "context_hash": null,
+        "accepted_reason": null
+      }
+    }
+  ]
+}
