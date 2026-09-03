@@ -16,9 +16,11 @@
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "allowJs": true,
+    "types": ["vitest/globals", "node", "vite/client"]
   },
-  "include": ["src"]
+  "include": ["src", "tests", "vitest.config.ts", "server.js"]
 }

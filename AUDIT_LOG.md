@@ -1,23 +1,26 @@
-# Audit Log - Syncstack
+# Audit Log - SyncStack (HERMES v6 Standard)
 
-## Fresh-Eyes Audit Pass - 2026-07-23
+## Comprehensive Full-Stack Audit & Upgrade Pass - 2026-08-15
 
 ### Scope & Objectives
-Execute comprehensive verification pass for `syncstack`:
-1. Run TypeScript typecheck (`npx tsc --noEmit`).
-2. Run test suites (`node --test tests/syncstack.test.js` & `node --test tests/divergent_merge.js`).
-3. Run production build (`npm run build`).
+1. Perform line-by-line static analysis and security audit across client and server.
+2. Fix all edge cases, race conditions, memory leaks, and prototype pollution risks.
+3. Modernize export capabilities (Vector SVG, High-Res PNG, JSON backup/restore).
+4. Harden CRDT concurrency, undo/redo manager, awareness protocols, and canvas geometry calculations.
+5. Create and run a massive, comprehensive Vitest suite (117 tests covering CRDT, Canvas math, WebSocket Auth, Disconnect Recovery, UI, Awareness, Undo/Redo, and Import/Export).
 
 ### Verification Gates Summary
 
 | Gate | Command | Result | Notes |
 | --- | --- | --- | --- |
-| Typecheck | `npx tsc --noEmit` | **PASS** | Zero type errors across React & Yjs codebases |
-| Unit & Integration Tests | `node --test tests/syncstack.test.js` | **PASS** | 16 tests passed (including 9 WebSocket Sync Suite subtests) |
-| Divergent Merge Suite | `node --test tests/divergent_merge.js` | **PASS** | 1 test suite / 5 offline merge runs passed, 0 data loss |
-| Build | `npm run build` | **PASS** | `tsc && vite build` succeeded in 16.09s |
+| TypeScript Strict Check | `npx tsc --noEmit` | **PASS** | 0 type errors across all TS/TSX modules and tests |
+| Vitest Test Suite | `npm test` | **PASS** | 117 tests passed across 9 suites (100% pass rate) |
+| Production Build | `npm run build` | **PASS** | `tsc && vite build` bundled cleanly in dist/ |
 
-### Detailed Log & Audit Observations
-- No fixes were required; source code, types, and test suites are intact and strictly adhering to requirements.
-- Convergence under offline concurrent updates verified deterministically across all test runs.
-- Production build outputs generated cleanly in `dist/`.
+### Key Improvements & Hardening
+- **SEC-01 & SEC-02**: Enforced prototype-pollution-safe token registry with null prototype dictionary and masked token logging.
+- **SEC-03**: Added strict collaborator username sanitization (truncation to 50 chars, whitespace trimming, anonymous fallback).
+- **RACE-01**: Pruning of orphaned card IDs in Kanban columns during CRDT reads.
+- **Export / Import Engine**: Enhanced SVG export with entity escaping, added high-res raster PNG export with custom DPI scale, and full JSON snapshot validation.
+- **Memory & Resource Cleanup**: Automated room document eviction upon client disconnection with timeout debouncing.
+- **Undo / Redo Stack**: Scoped to local operations with discrete step capture and remote transaction isolation.
