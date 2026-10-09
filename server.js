@@ -1,26 +1,99 @@
 import http from 'http'
+import crypto from 'crypto'
 import { WebSocketServer } from 'ws'
 import url from 'url'
 import yUtils from 'y-websocket/bin/utils'
 
 const { setupWSConnection, docs } = yUtils
 
+/**
+ * Parse a SYNC_AUTH credential map.
+ *
+ * Accepted forms:
+ *   "board1:tokenA,board2:tokenB"       simple pairs (comma separated)
+ *   '{"board1":["tokenA","tokenB"]}'    full JSON map
+ *
+ * There is deliberately NO default. createSyncServer() used to ship with
+ * hardcoded demo tokens (board1/token1, …) AND print them to stdout at
+ * boot, so any deployment that forgot to configure anything ran with
+ * publicly-known credentials. It now refuses to run unconfigured.
+ */
+export function parseSyncAuth(raw) {
+  if (!raw || typeof raw !== 'string') return null
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed)
+      const map = Object.create(null)
+      for (const [k, v] of Object.entries(parsed)) {
+        map[k] = Array.isArray(v) ? [...v] : [v]
+      }
+      return Object.keys(map).length > 0 ? map : null
+    } catch {
+      return null
+    }
+  }
+
+  const map = Object.create(null)
+  for (const pair of trimmed.split(',')) {
+    const sep = pair.indexOf(':')
+    if (sep <= 0 || sep === pair.length - 1) continue
+    const board = pair.slice(0, sep).trim()
+    const token = pair.slice(sep + 1).trim()
+    if (!board || !token) continue
+    if (map[board]) map[board].push(token)
+    else map[board] = [token]
+  }
+  return Object.keys(map).length > 0 ? map : null
+}
+
+/** Constant-time token comparison over SHA-256 of both sides. */
+function tokensMatchConstantTime(supplied, allowed) {
+  const a = crypto.createHash('sha256').update(String(supplied)).digest()
+  const b = crypto.createHash('sha256').update(String(allowed)).digest()
+  return crypto.timingSafeEqual(a, b)
+}
+
 export function createSyncServer(options = {}) {
   const {
-    authorizedAccess = {
-      board1: ['token1', 'admin-token'],
-      board2: ['token2', 'admin-token'],
-      board3: ['token3', 'admin-token']
-    },
+    authorizedAccess = null,
     roomCleanupTimeoutMs = 30000,
-    enableLogging = true
+    enableLogging = true,
+    allowedOrigins = null,
+    maxPayloadBytes = 1024 * 1024
   } = options
+
+  // Fail closed: no credentials, no server. An explicit empty map is also
+  // refused — "no boards configured" must not silently mean "no auth".
+  if (!authorizedAccess || typeof authorizedAccess !== 'object') {
+    throw new Error(
+      'createSyncServer requires an explicit authorizedAccess map (pass SYNC_AUTH). Refusing to start with default credentials.'
+    )
+  }
+  if (Object.keys(authorizedAccess).length === 0) {
+    throw new Error('createSyncServer: authorizedAccess is empty — refusing to start an unauthenticated sync server.')
+  }
 
   // Safe registry object with null prototype to prevent prototype pollution (SEC-01)
   const AUTHORIZED_ACCESS = Object.create(null)
   for (const [k, v] of Object.entries(authorizedAccess)) {
-    AUTHORIZED_ACCESS[k] = Array.isArray(v) ? [...v] : [v]
+    if (!Array.isArray(v) || v.length === 0 || v.some((t) => typeof t !== 'string' || !t)) {
+      throw new Error(`createSyncServer: invalid token list for board "${k}"`)
+    }
+    AUTHORIZED_ACCESS[k] = [...v]
   }
+
+  // Cross-site WebSocket hijacking (CSWSH) allowlist. Browser WebSocket
+  // handshakes always carry an Origin header; non-browser clients (native
+  // apps, the y-websocket server-side tests, curl) do not, and are still
+  // allowed — the CSWSH threat is specifically a browser page opening a
+  // socket to this server with the victim's ambient credentials/tokens.
+  // An empty/missing allowlist rejects every browser origin.
+  const ORIGIN_ALLOWLIST = Array.isArray(allowedOrigins)
+    ? new Set(allowedOrigins.map((o) => String(o).toLowerCase()))
+    : new Set()
 
   // Active room tracking and cleanup timers
   const roomConnections = new Map() // boardId -> Set of ws conns
@@ -37,10 +110,20 @@ export function createSyncServer(options = {}) {
     response.end('Yjs Sync Server Running\n')
   })
 
-  const wss = new WebSocketServer({ noServer: true })
+  const wss = new WebSocketServer({ noServer: true, maxPayload: maxPayloadBytes })
 
   server.on('upgrade', (request, socket, head) => {
     try {
+      // CSWSH guard: reject browser origins that are not on the allowlist.
+      // Absent Origin is allowed (non-browser clients never send it).
+      const origin = request.headers.origin
+      if (origin && !ORIGIN_ALLOWLIST.has(String(origin).toLowerCase())) {
+        log(`Upgrade rejected: origin not allowed (${origin})`)
+        socket.write('HTTP/1.1 403 Forbidden\r\nContent-Type: text/plain\r\n\r\nAccess denied: Origin not allowed.')
+        socket.destroy()
+        return
+      }
+
       const parsedUrl = url.parse(request.url || '', true)
       const boardId = typeof parsedUrl.query.boardId === 'string' ? parsedUrl.query.boardId.trim() : ''
       let token = typeof parsedUrl.query.token === 'string' ? parsedUrl.query.token.trim() : ''
@@ -70,7 +153,9 @@ export function createSyncServer(options = {}) {
       }
 
       const allowedTokens = AUTHORIZED_ACCESS[boardId]
-      if (!allowedTokens || !allowedTokens.includes(token)) {
+      // Constant-time comparison (hash both sides) so a token cannot be
+      // recovered byte-by-byte through response-time differences.
+      if (!allowedTokens || !allowedTokens.some((t) => tokensMatchConstantTime(token, t))) {
         log(`Access denied for boardId=${boardId}: Invalid token`)
         socket.write('HTTP/1.1 403 Forbidden\r\nContent-Type: text/plain\r\n\r\nAccess denied: Invalid token for this board.')
         socket.destroy()
@@ -172,19 +257,43 @@ export function createSyncServer(options = {}) {
 
 // Execute directly when run as script
 const isDirectRun = process.argv[1] && (
-  process.argv[1].endsWith('server.js') || 
+  process.argv[1].endsWith('server.js') ||
   process.argv[1].endsWith('server')
 )
 
 if (isDirectRun) {
   const port = process.env.PORT || 1234
-  const syncServer = createSyncServer()
+  const authorizedAccess = parseSyncAuth(process.env.SYNC_AUTH)
+
+  if (!authorizedAccess) {
+    // Fail closed. The previous build booted with hardcoded demo tokens and
+    // printed them to stdout — anyone with the source (or the logs) had valid
+    // credentials for every deployment that forgot to configure.
+    console.error(
+      'SYNC_AUTH is required. Format: "boardId:token,boardId:token" or a JSON map. Refusing to start.'
+    )
+    process.exit(1)
+  }
+
+  const allowedOrigins = (process.env.SYNC_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+
+  const syncServer = createSyncServer({
+    authorizedAccess,
+    allowedOrigins: allowedOrigins.length > 0 ? allowedOrigins : [],
+  })
+
   syncServer.server.listen(port, () => {
     console.log(`Yjs sync server running on port ${port}`)
-    console.log(`Authorized combinations:`)
-    console.log(`- board1: token1`)
-    console.log(`- board2: token2`)
-    console.log(`- board3: token3`)
+    // Board names only — tokens are never printed.
+    console.log(`Authorized boards: ${Object.keys(authorizedAccess).join(', ') || '(none)'}`)
+    console.log(
+      allowedOrigins.length > 0
+        ? `Allowed browser origins: ${allowedOrigins.join(', ')}`
+        : 'No browser origins allowed (non-browser clients only; set SYNC_ALLOWED_ORIGINS to allow web clients).'
+    )
   })
 }
 
