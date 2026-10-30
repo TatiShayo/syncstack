@@ -131,7 +131,6 @@ describe('WebSocket Authentication & Room Memory Management', () => {
 
     await delay(600)
 
-    // Add card to board 1
     doc1.getArray('col-todo').push(['isolated-card-board-1'])
 
     await delay(600)

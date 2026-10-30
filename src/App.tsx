@@ -77,7 +77,6 @@ export default function App() {
     setVersion((v) => v + 1)
   }, [])
 
-  // Update local awareness when username or color changes
   useEffect(() => {
     if (providerRef.current) {
       const sanitized = CRDTManager.sanitizeUsername(userName)

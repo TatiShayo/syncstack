@@ -190,7 +190,6 @@ export function createSyncServer(options = {}) {
     }
     roomConnections.get(boardId).add(conn)
 
-    // Set up Y.Doc binding mapping connection to the board ID document name
     setupWSConnection(conn, req, { docName: boardId })
 
     conn.on('close', () => {

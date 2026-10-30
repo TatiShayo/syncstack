@@ -79,7 +79,6 @@ describe('Offline Disconnect Recovery & State Reconciliation', () => {
     expect(providerA.wsconnected).toBe(true)
     expect(providerB.wsconnected).toBe(true)
 
-    // Create a shared card while online
     const cardId = 'conflict-task-1'
     docA.transact(() => {
       const cardsMap = docA.getMap('cards')

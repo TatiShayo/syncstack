@@ -130,7 +130,6 @@ describe('React UI Components Suite', () => {
       fireEvent.click(screen.getByTitle('Rectangle (R)'))
       expect(onSelectTool).toHaveBeenCalledWith('rectangle')
 
-      // Delete button appears when element is selected
       expect(screen.getByTitle('Delete Element(s)')).toBeInTheDocument()
     })
   })

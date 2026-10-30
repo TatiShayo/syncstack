@@ -33,7 +33,6 @@ export class CRDTManager {
     this.colDone = this.doc.getArray<string>('col-done')
     this.metaMap = this.doc.getMap<any>('meta')
 
-    // Initialize UndoManager scoped to local operations with discrete steps (captureTimeout: 0)
     this.undoManager = new Y.UndoManager(
       [this.elementsMap, this.cardsMap, this.colTodo, this.colInProgress, this.colDone],
       {
@@ -446,7 +445,6 @@ export class CRDTManager {
         this.elementsMap.delete(key)
       }
 
-      // Load elements
       for (const elem of snapshot.elements || []) {
         this.elementsMap.set(elem.id, { ...elem })
       }
@@ -457,7 +455,6 @@ export class CRDTManager {
         this.cardsMap.delete(key)
       }
 
-      // Load cards
       for (const [cardId, cardData] of Object.entries(snapshot.cards || {})) {
         this.cardsMap.set(cardId, { ...cardData })
       }
@@ -467,7 +464,6 @@ export class CRDTManager {
       if (this.colInProgress.length > 0) this.colInProgress.delete(0, this.colInProgress.length)
       if (this.colDone.length > 0) this.colDone.delete(0, this.colDone.length)
 
-      // Load columns
       if (snapshot.columns?.todo?.length) {
         this.colTodo.push(snapshot.columns.todo)
       }
@@ -478,7 +474,6 @@ export class CRDTManager {
         this.colDone.push(snapshot.columns.done)
       }
 
-      // Load metadata
       if (snapshot.title) {
         this.metaMap.set('title', snapshot.title)
       }

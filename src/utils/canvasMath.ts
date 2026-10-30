@@ -60,11 +60,11 @@ export function distanceBetween(p1: Point, p2: Point): number {
 export function distanceToSegment(p: Point, a: Point, b: Point): number {
   const l2 = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y)
   if (l2 === 0) return distanceBetween(p, a)
-  
+
   // Projection factor of point p onto line segment ab
   let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l2
   t = clamp(t, 0, 1)
-  
+
   const projection: Point = {
     x: a.x + t * (b.x - a.x),
     y: a.y + t * (b.y - a.y)
@@ -282,7 +282,7 @@ export function isPointInElement(point: Point, element: CanvasElement, hitTolera
 
   const { x, y, width, height, rotation = 0 } = element
   const center: Point = { x: x + width / 2, y: y + height / 2 }
-  
+
   // Transform test point into element's local unrotated coordinate space
   const localPoint = rotation ? rotatePoint(point, center, -rotation) : point
 
@@ -318,7 +318,6 @@ export function getElementsInSelection(
 
   return elements.filter((elem) => {
     const bb = getBoundingBox(elem)
-    // Check if bounding box overlaps selection box
     return !(
       bb.maxX < normMinX ||
       bb.minX > normMaxX ||
